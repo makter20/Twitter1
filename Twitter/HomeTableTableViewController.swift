@@ -20,18 +20,21 @@ class HomeTableTableViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        loadTweet()
-        myRefresControl.addTarget(self, action: #selector(loadTweet), for: .valueChanged)
+        loadTweets()
+        myRefresControl.addTarget(self, action: #selector(loadTweets), for: .valueChanged)
         tableView.refreshControl = myRefresControl
 
         
     }
     
     
-    @objc func loadTweet() {
+    
+    
+    @objc func loadTweets() {
         
+        numofTweet = 20
         let myurl = "https://api.twitter.com/1.1/statuses/home_timeline.json"
-        let myParams = ["count": 10]
+        let myParams = ["count": numofTweet]
         
         
         TwitterAPICaller.client?.getDictionariesRequest(url: myurl, parameters: myParams , success: { (tweets: [NSDictionary]) in
@@ -49,6 +52,37 @@ class HomeTableTableViewController: UITableViewController {
         })
         
         
+    }
+    
+    func loadMoreTweets() {
+        let myurl = "https://api.twitter.com/1.1/statuses/home_timeline.json"
+        numofTweet = numofTweet + 20
+        
+        let myParams = ["count": numofTweet]
+        
+        
+        TwitterAPICaller.client?.getDictionariesRequest(url: myurl, parameters: myParams , success: { (tweets: [NSDictionary]) in
+            
+            self.tweetArray.removeAll()
+            for tweet in tweets {
+                self.tweetArray.append(tweet)
+            }
+            self.tableView.reloadData()
+            self.myRefresControl.endRefreshing()
+            
+        }, failure: { (Error) in
+            print("Could not retrieve the tweet!")
+            
+        })
+        
+        
+    }
+    
+    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        
+        if indexPath.row + 1 == tweetArray.count {
+            loadMoreTweets()
+        }
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -91,7 +125,7 @@ class HomeTableTableViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 70.0;
+        return 100.0;
     }
 
     
